@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: #000000;
+            color: #8582C7;
+            font-size: x-large;
+        }
+
+        .stim-img {
+            width: 100px
+        }
+
+        .item {
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .selected {
+            border: 4px #ffffff solid;
+        }
+
+        .h-i-parent {
+            width: 10%;
+            height: 6px;
+            display: inline-block;
+        }
+
+        .b-l {
+            border-left: 3px #ffffff solid;
+        }
+
+        .b-r {
+            border-right: 3px #ffffff solid;
+        }
+
+        .b-u {
+            border-bottom: 3px #ffffff solid;
+        }
+    </style>
+    <script src="./index.js"></script>
+</head>
+
+<body>
+    <div id="content"
+        style="display: flex;width:100%;flex-direction: column;align-items: center;justify-content: center;">
+        <div id="task" style="display: flex;">
+            <div class="item">
+                <label>$<span id="left-num"></span></label>
+                <img id="l-img" class="stim-img" src="./img/100.png">
+            </div>
+            <div style="width: 100px;display: flex;align-items: center;justify-content: center;">
+                <label id="se-res"></label>
+            </div>
+            <div class="item">
+                <label>$0</label>
+                <img id="r-img" class="stim-img">
+                <label>$<span id="down-num"></span></label>
+            </div>
+        </div>
+        <div id="hy" style="display: none;align-items: center;flex-direction: column;">
+            <div><label style="color: #ffffff;">How happy are you at this moment?</label></div>
+            <div style="height: 100px;width: 50px;"></div>
+            <div style="width: 100%;">
+                <div style="z-index: 900;width: 100%;height:30px;background-color: #000000;"></div>
+                <div style="z-index: 899;width: 100%;position: relative;
+                top: -5px;display: flex;justify-content: center;">
+                    <div class="h-i-parent b-l b-u">
+                        <div id="point" style="width: 30px;
+                        height: 30px;
+                        background-color: #ff0000;
+                        border-radius: 150px;
+                        position: relative;
+                        top: -23px;
+                        left: 160px;"></div>
+                    </div>
+                    <div class="h-i-parent b-l b-u"></div>
+                    <div class="h-i-parent b-l b-u"></div>
+                    <div class="h-i-parent b-l b-u"></div>
+                    <div class="h-i-parent b-l b-u"></div>
+                    <div class="h-i-parent b-l b-u"></div>
+                    <div class="h-i-parent b-l b-u"></div>
+                    <div class="h-i-parent b-l b-u"></div>
+                    <div class="h-i-parent b-l b-r b-u"></div>
+                </div>
+            </div>
+            <div style="display: flex;color: #ffffff;justify-content: space-between;width: 100%">
+                <label>Very unhappy</label>
+                <label>Very happy</label>
+            </div>
+            <div>
+                <input readonly id="hy-input" value="5"
+                    style="width: 160px; height: 25px;border-radius: 10px;text-align: center;" />
+            </div>
+        </div>
+        <a id="download" style="opacity: 0;position: absolute;"></a>
+    </div>
+    <script>
+        let action = 'task'
+        let current = 0
+        let item = null
+        let outputCsvData = 'no,selected,result\n'
+        let resIndex = 1
+        document.getElementById('content').style.height = window.innerHeight - 100 + 'px'
+        const exportCsv = csvStr => {
+            let fileName = `export_${new Date().getTime()}.csv`;
+            let fileContent = csvStr
+            let myFile = new Blob([fileContent], { type: 'text/plain' })
+
+            window.URL = window.URL || window.webkitURL;
+            let dlEle = document.getElementById("download");
+
+            dlEle.setAttribute("href", window.URL.createObjectURL(myFile));
+            dlEle.setAttribute("download", fileName);
+            dlEle.click()
+        }
+        const start = () => {
+            for (let item of document.getElementsByClassName('selected')) {
+                item.classList.remove('selected')
+            }
+            document.getElementById('se-res').innerText = ''
+            item = getRandomData()
+            let leftNum = document.getElementById('left-num')
+            leftNum.innerText = item.c
+            let downNum = document.getElementById('down-num')
+            downNum.innerText = item.r
+            let img = document.getElementById('r-img')
+            if (item.p === '0.1') {
+                img.src = './img/10_90.png'
+            } else if (item.p === '0.5') {
+                img.src = './img/50_50.png'
+            } else if (item.p === '0.9') {
+                img.src = './img/90_10.png'
+            }
+        }
+        window.onkeyup = e => {
+            if (action === 'task') {
+                let res = item.c
+                let selected = 'Certain'
+                if (e.keyCode === 37) {
+                    // left arrow
+                    document.getElementById('l-img').classList.add('selected')
+                } else if (e.keyCode === 39) {
+                    // right arrow
+                    document.getElementById('r-img').classList.add('selected')
+                    res = (Math.random() < parseFloat(item.p) ? 1 : 0) * item.r
+                    selected = 'Probability'
+                }else{
+                    return 
+                }
+                // 显示结果
+                let resEle = document.getElementById('se-res')
+                resEle.innerText = '+ $' + res
+                if (res > 0) {
+                    resEle.style.color = 'green'
+                } else {
+                    resEle.style.color = 'red'
+                }
+                setTimeout(() => {
+                    current++
+                    // 记录csv数据
+                    outputCsvData += `${resIndex++},${selected},${res}\n`
+                    if (current === 5) {
+                        // 快乐度调查
+                        document.getElementById('task').style.display = 'none'
+                        document.getElementById('hy').style.display = 'flex'
+                        action = 'hy'
+                        current = 0
+                    } else {
+                        // 重新获取
+                        start()
+                    }
+                }, 1000);
+            } else {
+                if (e.keyCode === 32) {
+                    exportCsv(outputCsvData)
+                    outputCsvData = 'no,selected,result\n'
+                    document.getElementById('task').style.display = 'flex'
+                    document.getElementById('hy').style.display = 'none'
+                    action = 'task'
+                    start()
+                } else {
+                    let point = document.getElementById('point')
+                    let res = parseInt(point.style.left) + (e.keyCode === 37 ? -1 : e.keyCode === 39 ? 1 : 0) * 44
+                    if (res < -16) {
+                        res = -16
+                    } else if (res > 380) {
+                        res = 380
+                    }
+                    point.style.left = res + 'px'
+                    document.getElementById('hy-input').value = 5 + (res - 160) / 44
+                }
+            }
+        }
+        start()
+    </script>
+</body>
+
+</html>
