@@ -49,17 +49,21 @@
 </head>
 
 <body>
+    <div id="header" style="width: 100%;text-align: left;color: #ffffff;padding-top: 10px;">
+        <label style="margin-left:200px"><span id="total">Your Total: $0.0</span></label>
+    </div>
     <div id="content"
         style="display: flex;width:100%;flex-direction: column;align-items: center;justify-content: center;">
         <div id="task" style="display: flex;">
-            <div class="item">
+            <div class="item task-item">
                 <label>$<span id="left-num"></span></label>
                 <img id="l-img" class="stim-img" src="./img/100.png">
             </div>
-            <div style="width: 100px;display: flex;align-items: center;justify-content: center;">
+            <div
+                style="width: 250px;display: flex;align-items: center;justify-content: center;font-size: 60px;font-weight: bold;">
                 <label id="se-res"></label>
             </div>
-            <div class="item">
+            <div class="item task-item">
                 <label>$0</label>
                 <img id="r-img" class="stim-img">
                 <label>$<span id="down-num"></span></label>
@@ -108,7 +112,12 @@
         let item = null
         let outputCsvData = 'no,selected,result\n'
         let resIndex = 1
+        let totalNum = 0
         document.getElementById('content').style.height = window.innerHeight - 100 + 'px'
+        const playAudio = () => {
+            let a = new Audio('./media/Register.wav')
+            a.play()
+        }
         const exportCsv = csvStr => {
             let fileName = `export_${new Date().getTime()}.csv`;
             let fileContent = csvStr
@@ -152,8 +161,17 @@
                     document.getElementById('r-img').classList.add('selected')
                     res = (Math.random() < parseFloat(item.p) ? 1 : 0) * item.r
                     selected = 'Probability'
-                }else{
-                    return 
+                } else {
+                    return
+                }
+                // 播放声音
+                playAudio()
+                // 隐藏选择
+                let eles = document.getElementsByClassName('task-item')
+                let total = document.getElementById('total')
+                total.innerText = ''
+                for (let i = 0; i < eles.length; i++) {
+                    eles[i].style.display = 'none'
                 }
                 // 显示结果
                 let resEle = document.getElementById('se-res')
@@ -164,25 +182,39 @@
                     resEle.style.color = 'red'
                 }
                 setTimeout(() => {
-                    current++
-                    // 记录csv数据
-                    outputCsvData += `${resIndex++},${selected},${res}\n`
-                    if (current === 5) {
-                        // 快乐度调查
-                        document.getElementById('task').style.display = 'none'
-                        document.getElementById('hy').style.display = 'flex'
-                        action = 'hy'
-                        current = 0
-                    } else {
-                        // 重新获取
-                        start()
-                    }
-                }, 1000);
+                    // 显示加号
+                    resEle.style.color = '#ffffff'
+                    resEle.innerText = '+'
+                    // 恢复选择
+                    setTimeout(() => {
+                        totalNum += parseFloat(res)
+                        total.innerText = `Your Total: $${parseFloat(totalNum).toFixed(2)}`
+                        // 恢复
+                        for (let i = 0; i < eles.length; i++) {
+                            eles[i].style.display = 'flex'
+                        }
+                        current++
+                        // 记录csv数据
+                        outputCsvData += `${resIndex++},${selected},${res}\n`
+                        if (current === 5) {
+                            // 快乐度调查
+                            document.getElementById('task').style.display = 'none'
+                            document.getElementById('header').style.display = 'none'
+                            document.getElementById('hy').style.display = 'flex'
+                            action = 'hy'
+                            current = 0
+                        } else {
+                            // 重新获取
+                            start()
+                        }
+                    }, 1000)
+                }, 1000)
             } else {
                 if (e.keyCode === 32) {
-                    exportCsv(outputCsvData)
+                    // exportCsv(outputCsvData)
                     outputCsvData = 'no,selected,result\n'
                     document.getElementById('task').style.display = 'flex'
+                    document.getElementById('header').style.display = 'block'
                     document.getElementById('hy').style.display = 'none'
                     action = 'task'
                     start()
